@@ -196,7 +196,7 @@ This page shifts the focus to the underwriting and risk management teams, levera
 
 Designed for the claims and operations teams, this page investigates the root causes of denied payouts and provides actionable case-level data.
 
-![Operational & Claim Rejection Analysis](./images/operational_claim_rejection_analysis.png?raw=true)
+![Operational & Claim Rejection Analysis](./images/operational_and_claim_rejection_analysis.png?raw=true)
 
   - **Claim Rejection Root Causes:** By filtering out successful payouts, this chart exposes the primary reasons claims are denied (e.g., Damage less than deductible, Not actual flood). This insight is vital for refining policy wording and improving customer communication.
 
