@@ -2,26 +2,22 @@ bundle:
   name: fema_pipeline
 
 variables:
-  aws_access_key_id:
-    description: "AWS Access Key"
-  aws_secret_access_key:
-    description: "AWS Secret Key"
   s3_bucket_name:
     description: "S3 Bucket Name"
 
 workspace:
-  root_path: /Workspace/Shared/FEMA_Project/.bundle
+  root_path: Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
 
 environments:
   production:
     mode: production
     workspace:
-      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+      root_path: /Workspace/Shared/FEMA_Project/.bundle
 
 resources:
   jobs:
     fema_pipeline:
-      name: "FEMA End-to-End Data Pipeline (Medallion Architecture)"
+      name: "FEMA End-to-End Data Pipeline"
       schedule:
         quartz_cron_expression: "0 0 14 * * ?" 
         timezone_id: "Asia/Bangkok"
@@ -38,8 +34,6 @@ resources:
           spark_python_task:
             python_file: "scripts/ingest_from_rds_to_s3.py"
             parameters:
-              - ${var.aws_access_key_id}
-              - ${var.aws_secret_access_key}
               - ${var.s3_bucket_name}
 
         - task_key: cleaned_bronze_to_silver
@@ -49,19 +43,15 @@ resources:
           spark_python_task:
             python_file: "scripts/cleaned_bronze_to_silver.py"
             parameters:
-              - ${var.aws_access_key_id}
-              - ${var.aws_secret_access_key}
               - ${var.s3_bucket_name}
 
-        - task_key: fact_silver_to_gold
+        - task_key: create_fact_table
           depends_on:
             - task_key: cleaned_bronze_to_silver
           environment_key: serverless_env 
           spark_python_task:
-            python_file: "scripts/fact_silver_to_gold.py"
+            python_file: "scripts/create_fact_table.py"
             parameters:
-              - ${var.aws_access_key_id}
-              - ${var.aws_secret_access_key}
               - ${var.s3_bucket_name}
 
         - task_key: create_dimension_tables
@@ -69,6 +59,4 @@ resources:
           spark_python_task:
             python_file: "scripts/create_dimension_tables.py"
             parameters:
-              - ${var.aws_access_key_id}
-              - ${var.aws_secret_access_key}
               - ${var.s3_bucket_name}
