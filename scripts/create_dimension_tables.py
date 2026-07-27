@@ -16,7 +16,7 @@ def create_dimension_tables():
         .getOrCreate()
     )
 
-    bucket_name = sys.argv[3]
+    bucket_name = sys.argv[1]
     gold_output_path = f"s3://{bucket_name}/gold/dimensions"
 
     try:

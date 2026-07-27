@@ -1,27 +1,7 @@
 import sys  
-import boto3
-import json
 import logging
 from pyspark.sql import SparkSession
-
-
-def get_db_credentials(secret_name, aws_access_key, aws_secret_key, region_name="ap-southeast-1"):
-
-    client = boto3.client(
-        service_name='secretsmanager',
-        region_name=region_name,
-        aws_access_key_id=aws_access_key,
-        aws_secret_access_key=aws_secret_key
-    )
-    
-    try:
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-        secret = json.loads(get_secret_value_response['SecretString'])
-        return secret
-    
-    except Exception as e:
-        logging.error(f"Failed to retrieve password from Secrets Manager!: {e}")
-        raise e
+from databricks.sdk.runtime import dbutils
 
 
 def ingest_from_rds_to_s3():
@@ -36,25 +16,21 @@ def ingest_from_rds_to_s3():
         .getOrCreate()
     )
 
-    aws_access_key = sys.argv[1]
-    aws_secret_key = sys.argv[2]
-    bucket_name = sys.argv[3]
-
+    bucket_name = sys.argv[1]
     table_name = "public.raw_fema_claims"
     bronze_output_path = f"s3://{bucket_name}/bronze/raw_data/"
 
     try:
+        logging.info("Retrieving credentials from Databricks Secrets...")
+        
+        rds_endpoint  = dbutils.secrets.get(scope="fema_scope", key="rds_endpoint")
+        rds_username  = dbutils.secrets.get(scope="fema_scope", key="rds_username")
+        rds_password  = dbutils.secrets.get(scope="fema_scope", key="rds_password")
 
-        db_creds = get_db_credentials('fema/rds_credentials', aws_access_key, aws_secret_key)
-
-        rds_endpoint = next(v for k, v in db_creds.items() if 'host' in k)
-        db_user = next(v for k, v in db_creds.items() if 'user' in k)
-        db_password = next(v for k, v in db_creds.items() if 'pass' in k)
-
-        jdbc_url = f"jdbc:postgresql://{rds_endpoint}:5432/fema_flood_db"
+        jdbc_url = f"jdbc:postgresql://{rds_endpoint}/fema_flood_db"
         connection_properties = {
-            "user": db_user, 
-            "password": db_password,
+            "user": rds_username, 
+            "password": rds_password,
             "driver": "org.postgresql.Driver" 
         }
 

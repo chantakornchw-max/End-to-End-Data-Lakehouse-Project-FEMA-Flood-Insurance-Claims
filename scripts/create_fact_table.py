@@ -4,7 +4,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 
 
-def fact_silver_to_gold():
+def create_fact_table():
 
     logging.basicConfig(
         level=logging.INFO, 
@@ -16,7 +16,7 @@ def fact_silver_to_gold():
         .getOrCreate()
     )
 
-    bucket_name = sys.argv[3]
+    bucket_name = sys.argv[1]
     silver_input_path = f"s3://{bucket_name}/silver/cleaned_data/fact/"
     gold_output_path = f"s3://{bucket_name}/gold/fact/"
 
@@ -87,4 +87,4 @@ def fact_silver_to_gold():
         spark.stop()
 
 if __name__ == "__main__":
-    fact_silver_to_gold()
+    create_fact_table()

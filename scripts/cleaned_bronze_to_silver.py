@@ -17,7 +17,7 @@ def cleaned_bronze_to_silver():
         .getOrCreate()
     )
 
-    bucket_name = sys.argv[3]
+    bucket_name = sys.argv[1]
     bronze_input_path = f"s3://{bucket_name}/bronze/raw_data/"
     silver_output_path = f"s3://{bucket_name}/silver/cleaned_data/fact/" 
 
