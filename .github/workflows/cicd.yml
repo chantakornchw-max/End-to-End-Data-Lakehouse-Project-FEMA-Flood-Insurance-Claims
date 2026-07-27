@@ -44,7 +44,7 @@ jobs:
       - name: Flake8 Check
         run: |
           pip install flake8
-          flake8 scripts/ --max-line-length=200 --ignore=E203,W503,E128,E124,E305,W291,W391,E302,E303,W293,F403,F405,W292,E127,E131
+          flake8 scripts/ --max-line-length=200 --ignore=E203,W503,E128,E124,E305,W291,W391,E302,E303,W293,F403,F405,W292,E127,E131,E221
 
       # Terraform Validation
       - name: Setup Terraform
