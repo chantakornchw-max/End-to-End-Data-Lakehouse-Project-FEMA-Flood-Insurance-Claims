@@ -1,26 +1,88 @@
-# ==========================================
-# S3 Configurations
-# ==========================================
-resource "aws_s3_bucket" "fema_data_lake" {
-  bucket = "fema-flood-claims-bucket-2026"
+# ===============================================
+# Create IAM Role for Databricks
+# ===============================================
+resource "aws_iam_role" "databricks_s3_role" {
+  name = "fema-databricks-s3-access-role-pro"
 
-  force_destroy = true 
-
-  tags = {
-    Name        = "FEMA Data Lake"
-    Environment = "Dev"
-    Project     = "Data Engineering Portfolio"
-  }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${var.databricks_aws_control_plane_id}:root"
+        }
+        Action = "sts:AssumeRole"
+        Condition = {
+          StringEquals = {
+            "sts:ExternalId" = var.databricks_account_id
+          }
+        }
+      }
+    ]
+  })
 }
 
-# ==========================================
-# Blocking public access
-# ==========================================
+# ===============================================
+# Create AWS S3 Bucket 
+# ===============================================
+resource "aws_s3_bucket" "fema_data_lake" {
+  bucket        = var.s3_bucket
+  force_destroy = true
+}
+
 resource "aws_s3_bucket_public_access_block" "fema_data_lake_security" {
   bucket = aws_s3_bucket.fema_data_lake.id
-
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+# ===============================================
+# Custom IAM Policy & Attachment 
+# ===============================================
+resource "aws_iam_policy" "databricks_s3_policy" {
+  name        = "fema-databricks-s3-policy-pro"
+  
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ]
+
+        Resource = [
+          aws_s3_bucket.fema_data_lake.arn,
+          "${aws_s3_bucket.fema_data_lake.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_s3_access" {
+  role       = aws_iam_role.databricks_s3_role.name
+  policy_arn = aws_iam_policy.databricks_s3_policy.arn
+}
+
+# ===============================================
+# Create Databricks Storage Credential
+# ===============================================
+resource "databricks_storage_credential" "fema_s3_cred_pro" {
+  name = "fema_s3_cred_pro"
+
+  aws_iam_role {
+    role_arn = aws_iam_role.databricks_s3_role.arn
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.attach_s3_access
+  ]
 }

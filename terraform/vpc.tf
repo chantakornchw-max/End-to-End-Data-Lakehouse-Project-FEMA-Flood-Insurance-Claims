@@ -105,3 +105,16 @@ resource "aws_security_group" "databricks_sg" {
     Name = "fema-databricks-cluster-sg"
   }
 }
+
+
+# ==========================================
+# DB Subnet Group (Bridge for RDS)
+# ==========================================
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "fema-rds-subnet-group"
+  subnet_ids = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+
+  tags = {
+    Name = "FEMA RDS Subnet Group"
+  }
+}
