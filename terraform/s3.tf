@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 # ===============================================
 # Create IAM Role for Databricks
 # ===============================================
@@ -18,6 +20,13 @@ resource "aws_iam_role" "databricks_s3_role" {
             "sts:ExternalId" = var.databricks_account_id
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/fema-databricks-s3-access-role-pro"
+        }
+        Action = "sts:AssumeRole"
       }
     ]
   })
