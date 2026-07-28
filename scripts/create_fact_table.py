@@ -17,7 +17,7 @@ def create_fact_table():
     )
 
     bucket_name = sys.argv[1]
-    silver_input_path = f"s3://{bucket_name}/silver/cleaned_data/fact/"
+    silver_input_path = f"s3://{bucket_name}/silver/cleaned_data/"
     gold_output_path = f"s3://{bucket_name}/gold/fact/"
 
     try:
