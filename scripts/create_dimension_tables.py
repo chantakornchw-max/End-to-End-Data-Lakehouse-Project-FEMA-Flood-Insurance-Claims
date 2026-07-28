@@ -54,6 +54,7 @@ def create_dimension_tables():
                 .write
                 .format("delta") 
                 .mode("overwrite")
+                .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_occupancy_type/")
                 .saveAsTable("default.gold_dim_occupancy_type") 
         )
@@ -80,6 +81,7 @@ def create_dimension_tables():
                 .write
                 .format("delta")
                 .mode("overwrite")
+                .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_primary_residence/")
                 .saveAsTable("default.gold_dim_primary_residence")
         )
@@ -109,6 +111,7 @@ def create_dimension_tables():
                 .write
                 .format("delta")
                 .mode("overwrite")
+                .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_building_deductible/")
                 .saveAsTable("default.gold_dim_building_deductible")
         )
@@ -145,6 +148,7 @@ def create_dimension_tables():
             .write
             .format("delta")
             .mode("overwrite")
+            .option("overwriteSchema", "true")
             .option("path", f"{gold_output_path}/dim_cause_of_damage/")
             .saveAsTable("default.gold_dim_cause_of_damage")
         )
@@ -182,6 +186,7 @@ def create_dimension_tables():
                 .write
                 .format("delta")
                 .mode("overwrite")
+                .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_non_payment_reason/")
                 .saveAsTable("default.gold_dim_non_payment_reason")
         )
@@ -208,6 +213,7 @@ def create_dimension_tables():
             .write
             .format("delta")
             .mode("overwrite")
+            .option("overwriteSchema", "true")
             .option("path", f"{gold_output_path}/dim_is_underinsured/")
             .saveAsTable("default.gold_dim_is_underinsured")
         )

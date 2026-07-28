@@ -50,8 +50,11 @@ def ingest_from_rds_to_s3():
         )
 
         (df.write
+            .format("delta")
             .mode("overwrite")
-            .parquet(bronze_output_path)
+            .option("overwriteSchema", "true")
+            .option("path", bronze_output_path) 
+            .saveAsTable("default.bronze_raw_fema_claims") 
         )
 
         logging.info(f"Successfully uploaded data to {bronze_output_path}")

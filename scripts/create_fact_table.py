@@ -21,9 +21,9 @@ def create_fact_table():
     gold_output_path = f"s3://{bucket_name}/gold/fact/"
 
     try:
-        logging.info("Starting load Fact Table from Silver to Gold...")
+        logging.info("Starting add columns process to Fact Table...")
 
-        df_silver = spark.read.parquet(silver_input_path)
+        df_silver = spark.read.format("delta").load(silver_input_path)
 
         enriched_df = (df_silver
             .withColumn("building_age_at_loss", col("year_of_loss") - year(col("original_construction_date")))

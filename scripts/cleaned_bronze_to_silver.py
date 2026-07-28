@@ -25,7 +25,7 @@ def cleaned_bronze_to_silver():
         logging.info("Starting clean process...")
 
         cleaned_df = (
-            spark.read.parquet(bronze_input_path)
+            spark.read.format("delta").load(bronze_input_path)
 
             # Select columns, Change type, and Rename
             .select(
@@ -107,9 +107,12 @@ def cleaned_bronze_to_silver():
         (cleaned_df
             .repartition("year_of_loss")
             .write
+            .format("delta")
             .partitionBy("year_of_loss")
             .mode("overwrite")
-            .parquet(silver_output_path)
+            .option("overwriteSchema", "true")
+            .option("path", silver_output_path) 
+            .saveAsTable("default.silver_cleaned_fema_claims") 
         )
         logging.info(f"Successfully cleaned and uploaded data to {silver_output_path}")
 
