@@ -23,6 +23,7 @@ resource "aws_iam_role" "databricks_s3_role" {
   })
 }
 
+
 # ===============================================
 # Create AWS S3 Bucket 
 # ===============================================
@@ -31,6 +32,7 @@ resource "aws_s3_bucket" "fema_data_lake" {
   force_destroy = true
 }
 
+
 resource "aws_s3_bucket_public_access_block" "fema_data_lake_security" {
   bucket = aws_s3_bucket.fema_data_lake.id
   block_public_acls       = true
@@ -38,6 +40,7 @@ resource "aws_s3_bucket_public_access_block" "fema_data_lake_security" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+
 
 # ===============================================
 # Custom IAM Policy & Attachment 
@@ -70,19 +73,4 @@ resource "aws_iam_policy" "databricks_s3_policy" {
 resource "aws_iam_role_policy_attachment" "attach_s3_access" {
   role       = aws_iam_role.databricks_s3_role.name
   policy_arn = aws_iam_policy.databricks_s3_policy.arn
-}
-
-# ===============================================
-# Create Databricks Storage Credential
-# ===============================================
-resource "databricks_storage_credential" "fema_s3_cred_pro" {
-  name = "fema_s3_cred_pro"
-
-  aws_iam_role {
-    role_arn = aws_iam_role.databricks_s3_role.arn
-  }
-
-  depends_on = [
-    aws_iam_role_policy_attachment.attach_s3_access
-  ]
 }
