@@ -8,7 +8,7 @@
 * [Business Case](#business-case)
 * [Pipeline Architecture](#pipeline-architecture)
     * [Tech Stacks](#tech-stacks)
-    * [Data Pipeline Flow](#data-pipeline-flow)
+    * [Data Pipeline Flow (ETL)](#data-pipeline-flow-etl)
     * [Source Code Map](#source-code-map)
 * [Data Quality](#data-quality)
 * [Data Visualization](#data-visualization)
@@ -37,7 +37,7 @@ In the property and casualty insurance industry, accurate risk assessment is the
 
 
 ## Pipeline Architecture
-![Pipeline Architecture](./images/pipeline_architecture.png?raw=true)
+![Pipeline Architecture](./images/pipeline_arch.png?raw=true)
 
 
 ### Tech Stacks
@@ -48,9 +48,9 @@ In the property and casualty insurance industry, accurate risk assessment is the
 
 * **Amazon RDS:** The primary operational database acting as the source of truth for the raw FEMA flood insurance claims data.
 
-* **Amazon S3:** Acts as the project's scalable Data Lake, providing highly durable object storage for landing raw data and storing processed data across the Medallion Architecture layers.
+* **Amazon S3:** Acts as the project's scalable Data Lake, providing highly durable object storage for landing raw data and storing processed data in **Delta format** across the Medallion Architecture layers.
 
-* **Databricks:** The unified Lakehouse platform serving as the core execution environment. It manages the **Delta Lake** storage format and orchestrates the end-to-end workflow via **Databricks Jobs**.
+* **Databricks:** The unified Lakehouse platform serving as the core execution environment. It manages the **Delta Lake** storage format, orchestrates the end-to-end workflow via **Databricks Jobs**, and registers tables for seamless SQL querying across all layers.
 
 * **Apache Spark (PySpark):** The distributed data processing engine utilized within Databricks to extract, clean, transform, and logically model large-scale datasets efficiently.
 
@@ -59,19 +59,19 @@ In the property and casualty insurance industry, accurate risk assessment is the
 * **Power BI:** The visualization platform connected directly to the Databricks SQL Warehouse, used to create interactive dashboards and translate complex data into actionable insights.
 
 
-### Data Pipeline Flow
+### Data Pipeline Flow (ETL)
 
 * **Extract:** Automated data extraction from **Amazon RDS** (Data Source) using PySpark scripts. These tasks are orchestrated by **Databricks Jobs** and the extracted data is securely stored as raw files in **Amazon S3**.
 
-* **Transform:** Data is processed within **Databricks** using **PySpark**, strictly following the **Medallion Architecture** to ensure data quality and integrity:
+* **Transform:** Data is processed within **Databricks** using **PySpark**, strictly following the **Medallion Architecture** backed by **Delta Lake** format to ensure ACID transactions, data quality, and integrity:
 
   * **Raw Data (Bronze):** The initial ingestion layer where data is kept in its original state to maintain an immutable historical source of truth.
   
   * **Cleaned Data (Silver):** Involves data cleansing, column standardization, explicit data type casting, handling missing values, correcting anomalous negative financial metrics, and deduplication to create a reliable foundation.
   
-  * **Business-level Data (Gold):** The final analytical layer where data is logically modeled into a highly optimized **Star Schema** (1 Fact, 7 Dimension tables). This data is saved in **Delta** format and strategically partitioned, making it ready for downstream consumption.
+  * **Business-level Data (Gold):** The final analytical layer where data is logically modeled into a highly optimized **Star Schema** (1 Fact, 7 Dimension tables). The data is strategically partitioned to maximize query performance, making it highly optimized for downstream consumption.
 
-* **Load:** The transformed Gold tables are registered in the **Databricks Unity Catalog** and exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization.
+* **Load:** Tables across all Medallion layers (Bronze, Silver, Gold) are registered in the **Databricks Unity Catalog** for seamless data observability. The final Gold tables are explicitly exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization.
 
 
 ### Source Code Map
@@ -79,11 +79,11 @@ In the property and casualty insurance industry, accurate risk assessment is the
 | Component | File Link (Source Code) | Description |
 | :--- | :--- | :--- |
 | **CI/CD Pipeline** | [`cicd.yml`](./.github/workflows/cicd.yml) | The GitHub Actions workflow that automates code validation, Terraform provisioning, and Databricks workflows deployment. |
-| **Infrastructure (IaC)** | [`terraform/`](./terraform/) | Contains all Terraform configuration files (`vpc.tf`, `rds.tf`, `s3.tf`) used to provision the AWS cloud environment. |
 | **Orchestration / DABs** | [`databricks.yml`](./databricks.yml) | The Databricks Asset Bundles configuration defining the environments, job schedules, and workflow dependencies. |
+| **Infrastructure (IaC)** | [`terraform/`](./terraform/) | Contains all Terraform configuration files (`vpc.tf`, `rds.tf`, `s3.tf`) used to provision the AWS cloud environment. |
 | **Data Ingestion (Bronze)** | [`ingest_from_rds_to_s3.py`](./scripts/ingest_from_rds_to_s3.py) | PySpark script to extract raw data from Amazon RDS and load it into the S3 Data Lake. |
 | **Data Cleaning (Silver)** | [`cleaned_bronze_to_silver.py`](./scripts/cleaned_bronze_to_silver.py) | Cleanses data by standardizing column names, casting data types, handling missing values, correcting negative numerical anomalies, and removing duplicates to prepare for the Gold layer. |
-| **Data Modeling (Gold - Fact)** | [`fact_silver_to_gold.py`](./scripts/fact_silver_to_gold.py) | Core PySpark logic to build the central fact table containing numerical claim metrics and foreign keys. |
+| **Data Modeling (Gold - Fact)** | [`create_fact_table.py`](./scripts/create_fact_table.py) | Core PySpark logic to build the central fact table containing numerical claim metrics and foreign keys. |
 | **Data Modeling (Gold - Dim)** | [`create_dimension_tables.py`](./scripts/create_dimension_tables.py) | Constructs dimension tables by mapping raw integer codes to meaningful text descriptions based on the official FEMA Data Dictionary (e.g., Occupancy Type) to complete the Star Schema. |
 
 
