@@ -30,6 +30,13 @@ resource "databricks_external_location" "fema_s3_location" {
 # ===============================================
 resource "databricks_catalog" "fema_catalog" {
   name    = "fema_prod"
+  comment = "Main Catalog for FEMA Data Lakehouse"
+
+  storage_root = "s3://${aws_s3_bucket.fema_data_lake.id}/managed_catalog/"
+
+  depends_on = [
+    databricks_external_location.fema_s3_location
+  ]
 }
 
 resource "databricks_schema" "bronze" {
