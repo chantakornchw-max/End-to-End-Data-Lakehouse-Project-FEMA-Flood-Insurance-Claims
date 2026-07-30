@@ -74,7 +74,7 @@ def create_fact_table():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", gold_output_path) 
-            .saveAsTable("default.gold_fact_fema_claims") 
+            .saveAsTable("fema_prod.gold.fact_fema_claims") 
         )
 
         logging.info(f"Successfully loaded Fact table to {gold_output_path}")

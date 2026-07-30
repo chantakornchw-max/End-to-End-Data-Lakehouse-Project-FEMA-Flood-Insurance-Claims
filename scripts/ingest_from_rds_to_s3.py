@@ -54,7 +54,7 @@ def ingest_from_rds_to_s3():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", bronze_output_path) 
-            .saveAsTable("default.bronze_raw_fema_claims") 
+            .saveAsTable("fema_prod.bronze.raw_fema_claims") 
         )
 
         logging.info(f"Successfully uploaded data to {bronze_output_path}")

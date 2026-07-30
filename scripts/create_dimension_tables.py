@@ -56,9 +56,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_occupancy_type/")
-                .saveAsTable("default.gold_dim_occupancy_type") 
+                .saveAsTable("fema_prod.gold.dim_occupancy_type") 
         )
-        logging.info("Created and registered default.gold_dim_occupancy_type successfully")
+        logging.info("Created and registered fema_prod.gold.dim_occupancy_type successfully")
 
 
         # ==========================================
@@ -83,9 +83,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_primary_residence/")
-                .saveAsTable("default.gold_dim_primary_residence")
+                .saveAsTable("fema_prod.gold.dim_primary_residence")
         )
-        logging.info("Created and registered default.gold_dim_primary_residence successfully")
+        logging.info("Created and registered fema_prod.gold.dim_primary_residence successfully")
 
 
         # ==========================================
@@ -113,9 +113,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_building_deductible/")
-                .saveAsTable("default.gold_dim_building_deductible")
+                .saveAsTable("fema_prod.gold.dim_building_deductible")
         )
-        logging.info("Created and registered default.gold_dim_building_deductible successfully")
+        logging.info("Created and registered fema_prod.gold.dim_building_deductible successfully")
 
 
         # ==========================================
@@ -150,9 +150,9 @@ def create_dimension_tables():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", f"{gold_output_path}/dim_cause_of_damage/")
-            .saveAsTable("default.gold_dim_cause_of_damage")
+            .saveAsTable("fema_prod.gold.dim_cause_of_damage")
         )
-        logging.info("Created and registered default.gold_dim_cause_of_damage successfully")
+        logging.info("Created and registered fema_prod.gold.dim_cause_of_damage successfully")
 
 
         # ==========================================
@@ -188,9 +188,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_non_payment_reason/")
-                .saveAsTable("default.gold_dim_non_payment_reason")
+                .saveAsTable("fema_prod.gold.dim_non_payment_reason")
         )
-        logging.info("Created and registered default.gold_dim_non_payment_reason successfully")
+        logging.info("Created and registered fema_prod.gold.dim_non_payment_reason successfully")
 
 
         # ==========================================
@@ -215,9 +215,9 @@ def create_dimension_tables():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", f"{gold_output_path}/dim_is_underinsured/")
-            .saveAsTable("default.gold_dim_is_underinsured")
+            .saveAsTable("fema_prod.gold.dim_is_underinsured")
         )
-        logging.info("Created and registered default.gold_dim_is_underinsured successfully")
+        logging.info("Created and registered fema_prod.gold.dim_is_underinsured successfully")
 
 
     except Exception as e:

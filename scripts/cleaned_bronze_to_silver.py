@@ -112,7 +112,7 @@ def cleaned_bronze_to_silver():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", silver_output_path) 
-            .saveAsTable("default.silver_cleaned_fema_claims") 
+            .saveAsTable("fema_prod.silver.cleaned_fema_claims") 
         )
         logging.info(f"Successfully cleaned and uploaded data to {silver_output_path}")
 
