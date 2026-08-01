@@ -89,9 +89,9 @@ In the property and casualty insurance industry, accurate risk assessment is the
 
 ## Data Quality 
 
-To ensure data reliability and maintain a single source of truth, data quality rules were embedded directly into the PySpark transformation logic, while code and infrastructure stability were guaranteed through a robust GitHub Actions pipeline.
+To ensure data reliability and maintain a single source of truth, this project implements a **"Defense in Depth"** approach. Data quality rules are applied both during in-memory processing (PySpark) and rigidly enforced at the storage level (Delta Lake) to prevent data corruption.
 
-**Silver Layer (Data Cleansing & Standardization):** 
+  #### 1. Silver Layer (Data Cleansing & Standardization)
   * **Type Casting & Column Standardization:** Applied explicit data type casting (e.g., Integer, Double, Timestamp) and converted column names to standard `snake_case` conventions for consistency.
 
   * **Null & Missing Value Handling:** Prevented silent failures by dropping records with missing critical identifiers (`claim_id`, `date_of_loss`), while applying logical defaults (`"Unknown"`, `"Not Applicable"`, or `0.0`) to text and numeric columns.
@@ -101,19 +101,38 @@ To ensure data reliability and maintain a single source of truth, data quality r
   * **Deduplication:** Applied `.dropDuplicates(["claim_id"])` to guarantee transaction uniqueness before partitioning the data by `year_of_loss` to optimize downstream performance.
 
 
+  #### 2. Storage Enforcement Layer (Delta Lake Constraints)
+To guarantee that no erroneous data bypasses the pipeline, table-level constraints were deployed via Databricks SQL across the Silver and Gold layers:
+* **Mandatory Identifiers (NOT NULL):** Enforced strict rules on primary keys and temporal fields (`claim_id`, `date_of_loss`, `year_of_loss`) to ensure structural integrity.
+* **Business Logic Validation (CHECK):** Applied constraints with Null-safe logic (e.g., `water_depth IS NULL OR water_depth >= 0`) to guarantee physical measurements and financial metrics remain logically sound.
+* **Gold Layer Enrichment Checks:** Validated calculated business dimensions within the Fact table (e.g., ensuring `building_age_at_loss >= 0` and flag columns strictly contain `0` or `1`).
+
+
+```sql
+-- Example: Silver Layer Constraints (Data Cleansing Layer)
+ALTER TABLE fema_prod.silver.cleaned_fema_claims ALTER COLUMN claim_id SET NOT NULL;
+ALTER TABLE fema_prod.silver.cleaned_fema_claims ADD CONSTRAINT check_valid_water_depth CHECK (water_depth IS NULL OR water_depth >= 0);
+ALTER TABLE fema_prod.silver.cleaned_fema_claims ADD CONSTRAINT check_valid_latitude CHECK (latitude IS NULL OR (latitude >= -90 AND latitude <= 90));
+
+-- Example: Gold Layer Constraints (Business/Fact Layer)
+ALTER TABLE fema_prod.gold.fact_fema_claims ALTER COLUMN claim_id SET NOT NULL;
+ALTER TABLE fema_prod.gold.fact_fema_claims ADD CONSTRAINT check_valid_building_age CHECK (building_age_at_loss IS NULL OR building_age_at_loss >= 0);
+ALTER TABLE fema_prod.gold.fact_fema_claims ADD CONSTRAINT check_valid_underinsured_flag CHECK (is_underinsured IS NULL OR is_underinsured IN (0, 1));
+```
+
 
 ## Data Visualization
 
 ### Data Modeling
-![Data Modeling](./images/data_modeling.png?raw=true)
+![Data Modeling](./images/data_modeling1.png?raw=true)
 
 #### Star Schema
 
 To ensure high performance and flexible analysis, I implemented a **Star Schema** model within Power BI. This structure separates business metrics (Facts) from descriptive attributes (Dimensions), optimizing the model for the massive FEMA dataset.
 
- * **Fact Table:** The core metrics and foreign keys are consolidated into a single fact table: `gold_fact_fema_claims`.
+ * **Fact Table:** The core metrics and foreign keys are consolidated into a single fact table: `fact_fema_claims`.
 
- * **Dimension Tables:** Descriptive attributes are split into specialized dimensions (e.g., `gold_dim_non_payment_reason`, `gold_dim_cause_of_damage`, `gold_dim_occupancy_type`, and a custom `dim_date`) to provide precise filtering context.
+ * **Dimension Tables:** Descriptive attributes are split into specialized dimensions (e.g., `dim_non_payment_reason`, `dim_cause_of_damage`, `dim_occupancy_type`, and a custom `dim_date`) to provide precise filtering context.
 
 #### Custom Date Dimension
 
