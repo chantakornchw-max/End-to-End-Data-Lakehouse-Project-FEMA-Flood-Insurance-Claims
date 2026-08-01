@@ -2,6 +2,7 @@ import sys
 import logging
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
+from pyspark.sql.types import *
 
 
 def create_fact_table():
@@ -26,7 +27,13 @@ def create_fact_table():
         df_silver = spark.read.format("delta").load(silver_input_path)
 
         enriched_df = (df_silver
-            .withColumn("building_age_at_loss", col("year_of_loss") - year(col("original_construction_date")))
+            .withColumn("raw_age", col("year_of_loss") - year(col("original_construction_date")))
+            .withColumn("building_age_at_loss", 
+                when(col("raw_age") < 0, lit(None).cast(IntegerType()))
+                .otherwise(col("raw_age"))
+            )
+            .drop("raw_age")
+
             .withColumn("total_damage_amount", round(col("building_damage_amount") + col("contents_damage_amount"), 2))
             .withColumn("total_net_payment", round(col("net_building_payment_amount") + col("net_contents_payment_amount"), 2))         
             .withColumn("coverage_percentage", when(col("total_damage_amount") > 0, round((col("total_net_payment") / col("total_damage_amount")) * 100, 2)).otherwise(0.0))
