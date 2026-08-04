@@ -10,7 +10,10 @@
     * [Tech Stacks](#tech-stacks)
     * [Data Pipeline Flow (ETL)](#data-pipeline-flow-etl)
     * [Source Code Map](#source-code-map)
-* [Data Quality](#data-quality)
+* [Data Governance](#data-governance)
+    * [Data Lineage](#data-lineage)
+    * [Data Quality](#data-quality)
+    * [Data Dictionary](#data-dictionary)
 * [Data Visualization](#data-visualization)
 	* [Data Modeling](#data-modeling)
     * [Executive Overview](#executive-overview)
@@ -86,8 +89,21 @@ In the property and casualty insurance industry, accurate risk assessment is the
 | **Data Modeling (Gold - Fact)** | [`create_fact_table.py`](./scripts/create_fact_table.py) | Core PySpark logic to build the central fact table containing numerical claim metrics and foreign keys. |
 | **Data Modeling (Gold - Dim)** | [`create_dimension_tables.py`](./scripts/create_dimension_tables.py) | Constructs dimension tables by mapping raw integer codes to meaningful text descriptions based on the official FEMA Data Dictionary (e.g., Occupancy Type) to complete the Star Schema. |
 
+## Data Governance
 
-## Data Quality 
+To ensure data reliability, traceability, and usability across the organization, this project implements a robust Data Governance framework leveraging **Databricks Unity Catalog** and **Delta Lake**.
+
+### Data Lineage
+
+Understanding the data's journey is crucial for debugging and auditing. By utilizing Databricks Unity Catalog, the pipeline automatically captures and visualizes the end-to-end **Data Lineage**. 
+
+![Data Lineage](./images/data_lineage.png?raw=true)
+
+
+* The graph seamlessly traces data movement from raw ingestion (`raw_fema_claims` in the Bronze layer) through transformation (`cleaned_fema_claims` in Silver) to the final business-ready dataset (`fact_fema_claims` in Gold).
+* This visual transparency ensures full visibility into data dependencies, allowing downstream users (e.g., Data Analysts) to easily verify the origin of their metrics and accelerating the debugging process.
+
+### Data Quality 
 
 To ensure data reliability and maintain a single source of truth, this project implements a **"Defense in Depth"** approach. Data quality rules are applied both during in-memory processing (PySpark) and rigidly enforced at the storage level (Delta Lake) to prevent data corruption.
 
@@ -119,6 +135,32 @@ ALTER TABLE fema_prod.gold.fact_fema_claims ALTER COLUMN claim_id SET NOT NULL;
 ALTER TABLE fema_prod.gold.fact_fema_claims ADD CONSTRAINT check_valid_building_age CHECK (building_age_at_loss IS NULL OR building_age_at_loss >= 0);
 ALTER TABLE fema_prod.gold.fact_fema_claims ADD CONSTRAINT check_valid_underinsured_flag CHECK (is_underinsured IS NULL OR is_underinsured IN (0, 1));
 ```
+
+### Data Dictionary 
+
+To enable self-service analytics and eliminate data silos, a comprehensive Data Dictionary was integrated directly into the `fema_prod` catalog using Databricks Unity Catalog. By embedding metadata natively into the platform, downstream users (Data Analysts and BI Developers) can easily understand the context of the data without relying on outdated external spreadsheets.
+
+<!-- * **Metadata as Code:** Descriptions for both Fact and Dimension tables were applied programmatically via SQL `COMMENT ON` statements, ensuring reproducibility and version control.
+* **Column-Level Clarity:** Detailed business definitions were mapped directly from the official FEMA documentation. This includes derived financial metrics (e.g., `coverage_percentage`, `building_age_at_loss`) and complex flag indicators (e.g., `is_underinsured`). -->
+
+![Data Dictionary](./images/data_dic.png?raw=true)
+
+![Data Dictionary2](./images/data_dic2.png?raw=true)
+
+**Implementation Example:**
+The following SQL snippet demonstrates how the table and column-level comments were enforced at the storage layer:
+
+```sql
+-- Enforcing table-level description
+COMMENT ON TABLE fema_prod.gold.fact_fema_claims IS 'Fact table in the Gold layer storing historical NFIP flood insurance claims with transformed data and derived financial metrics.';
+
+-- Enforcing column-level definitions
+ALTER TABLE fema_prod.gold.fact_fema_claims ALTER COLUMN year_of_loss COMMENT 'Year in which the flood loss occurred (used as Partition Key).';
+
+ALTER TABLE fema_prod.gold.fact_fema_claims ALTER COLUMN cause_of_damage COMMENT 'Code indicating the primary cause of flood damage (e.g., Flash Flood, Tidal Surge).';
+```
+
+
 
 
 ## Data Visualization
