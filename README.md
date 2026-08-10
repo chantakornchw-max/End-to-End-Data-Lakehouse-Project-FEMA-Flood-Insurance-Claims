@@ -27,20 +27,20 @@
 
 In the property and casualty insurance industry, accurate risk assessment is the primary defense against catastrophic financial losses. For stakeholders and underwriting teams, managing flood risks requires more than just high-level observation; it demands highly granular, automated, and actionable intelligence. Stakeholders within the risk management, actuarial, and claims operations teams rely on this pipeline for:
 
-* **Optimizing** premium pricing models based on precise physical risk factors, such as property elevation and flood zone vulnerabilities.
+* Optimizing premium pricing models based on precise physical risk factors, such as property elevation and flood zone vulnerabilities.
 
-* **Analyzing** geographic risk exposure to pinpoint vulnerability hotspots and proactively manage policy capacity in high-risk areas.
+* Analyzing geographic risk exposure to pinpoint vulnerability hotspots and proactively manage policy capacity in high-risk areas.
 
-* **Identifying** systemic underinsurance behaviors across specific property portfolios to uncover targeted cross-selling and upselling opportunities.
+* Identifying systemic underinsurance behaviors across specific property portfolios to uncover targeted cross-selling and upselling opportunities.
 
-* **Replacing** fragmented, manual data wrangling with a robust automated pipeline, allowing the team to focus on mitigating claim rejections and refining policy strategies rather than data collection.
+<!-- * **Replacing** fragmented, manual data wrangling with a robust automated pipeline, allowing the team to focus on mitigating claim rejections and refining policy strategies rather than data collection. -->
 
 
 **Data Source:** [OpenFEMA Dataset](https://www.fema.gov/openfema-data-page/fima-nfip-redacted-claims-v2)
 
 
 ## Pipeline Architecture
-![Pipeline Architecture](./images/pipeline_arch.png?raw=true)
+![Pipeline Architecture](./images/pipeline_architecture.png?raw=true)
 
 
 ### Tech Stacks
@@ -53,13 +53,15 @@ In the property and casualty insurance industry, accurate risk assessment is the
 
 * **Amazon S3:** Acts as the project's scalable Data Lake, providing highly durable object storage for landing raw data and storing processed data in **Delta format** across the Medallion Architecture layers.
 
+* **Apache Spark:** The distributed data processing engine utilized within Databricks to extract, clean, transform, and logically model large-scale datasets efficiently.
+
 * **Databricks:** The unified Lakehouse platform serving as the core execution environment. It manages the **Delta Lake** storage format, orchestrates the end-to-end workflow via **Databricks Jobs**, and registers tables for seamless SQL querying across all layers.
 
-* **Apache Spark (PySpark):** The distributed data processing engine utilized within Databricks to extract, clean, transform, and logically model large-scale datasets efficiently.
+* **Databricks Unity Catalog:** The centralized data governance solution utilized to manage metadata, enforce fine-grained access controls, and provide automated data lineage tracking, ensuring a secure and discoverable single source of truth across the Lakehouse.
 
-* **Databricks SQL Warehouse:** A serverless compute engine used to expose the highly optimized business-level data (Gold layer) for executing complex analytical queries at high speed.
+* **Databricks SQL Warehouses:** A serverless compute engine used to expose the highly optimized business-level data (Gold layer) for executing complex analytical queries at high speed.
 
-* **Power BI:** The visualization platform connected directly to the Databricks SQL Warehouse, used to create interactive dashboards and translate complex data into actionable insights.
+* **Power BI:** The visualization platform connected directly to the Databricks SQL Warehouses, used to create interactive dashboards and translate complex data into actionable insights.
 
 
 ### Data Pipeline Flow (ETL)
