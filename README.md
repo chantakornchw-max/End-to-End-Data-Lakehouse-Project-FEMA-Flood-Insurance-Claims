@@ -1,4 +1,4 @@
-# End-to-End Data Engineering Project: FEMA Flood Insurance Claims
+# End-to-End Data Lakehouse Project: FEMA Flood Insurance Claims
 
 <!-- **⚠️ Work in Progress ⚠️**  -->
 
@@ -6,9 +6,9 @@
 ## Table of Contents
 
 * [Business Case](#business-case)
-* [Pipeline Architecture](#pipeline-architecture)
+* [Pipeline Architecture](#pipeline-architecture-data-lakehouse)
     * [Tech Stacks](#tech-stacks)
-    * [Data Pipeline Flow (ETL)](#data-pipeline-flow-etl)
+    * [Data Pipeline Flow](#data-pipeline-flow-elt)
     * [Source Code Map](#source-code-map)
 * [Data Governance](#data-governance)
     * [Data Lineage](#data-lineage)
@@ -19,8 +19,7 @@
     * [Executive Overview](#executive-overview)
     * [Geospatial & Risk Analysis](#geospatial--risk-analysis)
     * [Operational & Claim Rejection Analysis](#operational--claim-rejection-analysis)
-<!-- * [Challenges](#challenges)
-* [Setup Instructions](#setup-instructions) -->
+
 
 
 ## Business Case
@@ -39,7 +38,7 @@ In the property and casualty insurance industry, accurate risk assessment is the
 **Data Source:** [OpenFEMA Dataset](https://www.fema.gov/openfema-data-page/fima-nfip-redacted-claims-v2)
 
 
-## Pipeline Architecture
+## Pipeline Architecture (Data Lakehouse)
 ![Pipeline Architecture](./images/pipeline_architecture.png?raw=true)
 
 
@@ -64,7 +63,7 @@ In the property and casualty insurance industry, accurate risk assessment is the
 * **Power BI:** The visualization platform connected directly to the Databricks SQL Warehouses, used to create interactive dashboards and translate complex data into actionable insights.
 
 
-### Data Pipeline Flow (ETL)
+<!-- ### Data Pipeline Flow (ETL)
 
 * **Extract:** Automated data extraction from **Amazon RDS** (Data Source) using PySpark scripts. These tasks are orchestrated by **Databricks Jobs** and the extracted data is securely stored as raw files in **Amazon S3**.
 
@@ -76,7 +75,22 @@ In the property and casualty insurance industry, accurate risk assessment is the
   
   * **Business-level Data (Gold):** The final analytical layer where data is logically modeled into a highly optimized **Star Schema** (1 Fact, 7 Dimension tables). The data is strategically partitioned to maximize query performance, making it highly optimized for downstream consumption.
 
-* **Load:** Tables across all Medallion layers (Bronze, Silver, Gold) are registered in the **Databricks Unity Catalog** for seamless data observability. The final Gold tables are explicitly exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization.
+* **Load:** Tables across all Medallion layers (Bronze, Silver, Gold) are registered in the **Databricks Unity Catalog** for seamless data observability. The final Gold tables are explicitly exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization. -->
+
+
+### Data Pipeline Flow (ELT)
+
+* **Extract & Load:** Automated data extraction from **Amazon RDS** (Data Source) using **PySpark** scripts. These tasks are orchestrated by **Databricks Jobs**, and the extracted data is directly loaded and securely stored as raw files in **Amazon S3** (Data Lake).
+
+* **Transform:** Data is processed within **Databricks** using **PySpark**, strictly following the **Medallion Architecture** backed by **Delta Lake** format to ensure ACID transactions, data quality, and integrity:
+
+  * **Raw Data (Bronze):** The initial ingestion layer where data is kept in its original state to maintain an immutable historical source of truth.
+  
+  * **Cleaned Data (Silver):** Involves data cleansing, column standardization, explicit data type casting, handling missing values, correcting anomalous negative financial metrics, and deduplication to create a reliable foundation.
+  
+  * **Business-level Data (Gold):** The final analytical layer where data is logically modeled into a highly optimized **Star Schema** (1 Fact, 7 Dimension tables). The data is strategically partitioned to maximize query performance, making it highly optimized for downstream consumption.
+
+* **Serve / Publish:** Tables across all Medallion layers are registered in the **Databricks Unity Catalog** for seamless data observability. The final Gold tables are explicitly exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization.
 
 
 ### Source Code Map
