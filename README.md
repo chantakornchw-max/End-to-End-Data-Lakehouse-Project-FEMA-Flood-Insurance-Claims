@@ -44,13 +44,14 @@ In the property and casualty insurance industry, accurate risk assessment is the
 
 ### Tech Stacks
 
-* **GitHub Actions:** Implements a 3-stage CI/CD pipeline to enforce quality code, automate AWS infrastructure provisioning via **Terraform**, and seamlessly deploy the data workflows to production using **Databricks Asset Bundles (DABs)**.
-
 * **Terraform:** Used as Infrastructure as Code (IaC) to automate the end-to-end provisioning of the AWS environment. This includes configuring the underlying network architecture **(VPC)**, deploying the source database **(Amazon RDS)**, and setting up the Data Lake **(Amazon S3)**, ensuring a highly reproducible and version-controlled infrastructure.
+
 
 * **Amazon RDS:** The primary operational database acting as the source of truth for the raw FEMA flood insurance claims data.
 
 * **Amazon S3:** Acts as the project's scalable Data Lake, providing highly durable object storage for landing raw data and storing processed data in **Delta format** across the Medallion Architecture layers.
+
+* **GitHub Actions:** Implements a 3-stage CI/CD pipeline to enforce quality code, automate AWS infrastructure provisioning via **Terraform**, and seamlessly deploy the data workflows to production using **Databricks Asset Bundles (DABs)**.
 
 * **Apache Spark:** The distributed data processing engine utilized within Databricks to extract, clean, transform, and logically model large-scale datasets efficiently.
 
@@ -90,7 +91,7 @@ In the property and casualty insurance industry, accurate risk assessment is the
   
   * **Business-level Data (Gold):** The final analytical layer where data is logically modeled into a highly optimized **Star Schema** (1 Fact, 7 Dimension tables). The data is strategically partitioned to maximize query performance, making it highly optimized for downstream consumption.
 
-* **Serve / Publish:** Tables across all Medallion layers are registered in the **Databricks Unity Catalog** for seamless data observability. The final Gold tables are explicitly exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization.
+* **Serve:** Tables across all Medallion layers are registered in the **Databricks Unity Catalog** for seamless data observability. The final Gold tables are explicitly exposed via **Databricks SQL Warehouse**, serving as a high-performance querying endpoint for **Power BI** visualization.
 
 
 ### Source Code Map
@@ -146,7 +147,7 @@ ALTER TABLE fema_prod.silver.cleaned_fema_claims ALTER COLUMN claim_id SET NOT N
 ALTER TABLE fema_prod.silver.cleaned_fema_claims ADD CONSTRAINT check_valid_water_depth CHECK (water_depth IS NULL OR water_depth >= 0);
 ALTER TABLE fema_prod.silver.cleaned_fema_claims ADD CONSTRAINT check_valid_latitude CHECK (latitude IS NULL OR (latitude >= -90 AND latitude <= 90));
 
--- Example: Gold Layer Constraints (Business/Fact Layer)
+-- Example: Gold Layer Constraints (Fact Layer)
 ALTER TABLE fema_prod.gold.fact_fema_claims ALTER COLUMN claim_id SET NOT NULL;
 ALTER TABLE fema_prod.gold.fact_fema_claims ADD CONSTRAINT check_valid_building_age CHECK (building_age_at_loss IS NULL OR building_age_at_loss >= 0);
 ALTER TABLE fema_prod.gold.fact_fema_claims ADD CONSTRAINT check_valid_underinsured_flag CHECK (is_underinsured IS NULL OR is_underinsured IN (0, 1));
