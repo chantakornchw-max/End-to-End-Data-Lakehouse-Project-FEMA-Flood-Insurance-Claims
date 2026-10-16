@@ -3,7 +3,7 @@ import logging
 import scripts.common.config as cfg
 from delta.tables import DeltaTable
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, current_timestamp
+from pyspark.sql.functions import col
 from databricks.sdk.runtime import dbutils
 
 
@@ -189,7 +189,7 @@ def extract_incremental():
             .execute()
         )
         
-        logging.info(f"Successfully updated rows_read in RUN_TABLE.")
+        logging.info("Successfully updated rows_read in RUN_TABLE.")
 
     except Exception as e:
          logging.error( f"Unexpected error occurred!: {e}")
