@@ -4,6 +4,8 @@
 *.tfvars
 
 *.csv
+!data/fema_change_*.csv
+
 migrate_csv_to_rds.py
 
 __pycache__/

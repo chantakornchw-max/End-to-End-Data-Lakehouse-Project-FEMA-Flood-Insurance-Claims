@@ -1,62 +1,221 @@
 bundle:
-  name: fema_pipeline
+  name: fema_pipeline_2026
+
 
 variables:
   s3_bucket_name:
-    description: "S3 Bucket Name"
+    description: "S3 bucket used by the target environment"
 
-workspace:
-  root_path: Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+  environment_label:
+    description: "Environment label used in job names"
 
-environments:
-  production:
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      environment_label: "dev"
+      s3_bucket_name: "fema-flood-claims-bucket-2026-dev"
+    
+
+  prod:
     mode: production
     workspace:
-      root_path: /Workspace/Shared/FEMA_Project/.bundle
+      root_path: /Workspace/Production/FEMA_Project/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      environment_label: "prod"
+      s3_bucket_name: "fema-flood-claims-bucket-2026-prod"
+    resources:
+      jobs:
+        fema_incremental_load:
+          schedule:
+            quartz_cron_expression: "0 0 14 * * ?" 
+            timezone_id: "Asia/Bangkok"
+            pause_status: "PAUSED"
+
 
 resources:
   jobs:
-    fema_pipeline:
-      name: "FEMA End-to-End Data Pipeline"
-      schedule:
-        quartz_cron_expression: "0 0 14 * * ?" 
-        timezone_id: "Asia/Bangkok"
-        pause_status: PAUSED
-
+  
+    # Initial Load 
+    fema_initial_load:
+      name: "${bundle.name}-${var.environment_label}-initial-load"
       environments:
         - environment_key: serverless_env
           spec:
             client: "1"
 
       tasks:
-        - task_key: ingest_from_rds_to_s3
+        - task_key: t0_start_run
           environment_key: serverless_env 
           spark_python_task:
-            python_file: "scripts/ingest_from_rds_to_s3.py"
+            python_file: "./scripts/common/start_run.py"
             parameters:
-              - ${var.s3_bucket_name}
+              - "{{job.run_id}}"
+              - "INITIAL"
 
-        - task_key: cleaned_bronze_to_silver
+        - task_key: t1_extract_initial
           depends_on:
-            - task_key: ingest_from_rds_to_s3
+            - task_key: t0_start_run
           environment_key: serverless_env 
           spark_python_task:
-            python_file: "scripts/cleaned_bronze_to_silver.py"
+            python_file: "./scripts/initial/t1_extract_initial.py"
             parameters:
+              - "{{job.run_id}}"
               - ${var.s3_bucket_name}
 
-        - task_key: create_fact_table
+        - task_key: t2_clean_bronze_to_silver
           depends_on:
-            - task_key: cleaned_bronze_to_silver
+            - task_key: t1_extract_initial
           environment_key: serverless_env 
           spark_python_task:
-            python_file: "scripts/create_fact_table.py"
+            python_file: "./scripts/initial/t2_clean_bronze_to_silver.py"
             parameters:
+              - "{{job.run_id}}"
               - ${var.s3_bucket_name}
 
-        - task_key: create_dimension_tables
+        - task_key: t3_create_fact_table
+          depends_on:
+            - task_key: t2_clean_bronze_to_silver
           environment_key: serverless_env 
           spark_python_task:
-            python_file: "scripts/create_dimension_tables.py"
+            python_file: "./scripts/initial/t3_create_fact_table.py" 
             parameters:
+              - "{{job.run_id}}"
               - ${var.s3_bucket_name}
+
+        - task_key: t4_create_dimension_tables
+          depends_on:
+            - task_key: t3_create_fact_table
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/initial/t4_create_dimension_tables.py"
+            parameters:
+              - "{{job.run_id}}"
+              - ${var.s3_bucket_name}
+
+        - task_key: t5_finalize_run_success
+          depends_on:
+            - task_key: t4_create_dimension_tables 
+          run_if: ALL_SUCCESS
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/finalize_run.py"
+            parameters:
+              - "{{job.run_id}}"
+              - "SUCCESS"
+
+        - task_key: t5_finalize_run_failed
+          depends_on: 
+            - task_key: t0_start_run
+            - task_key: t1_extract_initial
+            - task_key: t2_clean_bronze_to_silver
+            - task_key: t3_create_fact_table
+            - task_key: t4_create_dimension_tables
+          run_if: AT_LEAST_ONE_FAILED
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/finalize_run.py"
+            parameters:
+              - "{{job.run_id}}"
+              - "FAILED"
+
+        - task_key: t6_update_watermark
+          depends_on:
+            - task_key: t5_finalize_run_success
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/update_watermark.py"
+            parameters:
+              - "{{job.run_id}}"
+
+    # Incremental Load
+    fema_incremental_load:
+      name: "${bundle.name}-${var.environment_label}-incremental-load"
+      environments:
+        - environment_key: serverless_env
+          spec:
+            client: "1"
+
+      tasks:
+        - task_key: t0_start_run
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/start_run.py"
+            parameters:
+              - "{{job.run_id}}"
+              - "INCREMENTAL"
+
+        - task_key: t1_extract_incremental
+          depends_on:
+            - task_key: t0_start_run
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/incremental/t1_extract_incremental.py"
+            parameters: 
+              - "{{job.run_id}}"
+
+        - task_key: t2_merge_to_silver
+          depends_on:
+            - task_key: t1_extract_incremental
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/incremental/t2_merge_to_silver.py"
+            parameters: 
+              - "{{job.run_id}}"
+
+        - task_key: t3_merge_fact_table
+          depends_on:
+            - task_key: t2_merge_to_silver
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/incremental/t3_merge_fact_table.py"
+            parameters: 
+              - "{{job.run_id}}"
+
+        - task_key: t4_merge_dimension_tables
+          depends_on:
+            - task_key: t3_merge_fact_table
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/incremental/t4_merge_dimension_tables.py"
+            parameters: 
+              - "{{job.run_id}}"
+
+        - task_key: t5_finalize_run_success
+          depends_on:
+            - task_key: t4_merge_dimension_tables
+          run_if: ALL_SUCCESS
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/finalize_run.py"
+            parameters:
+              - "{{job.run_id}}"
+              - "SUCCESS"
+
+        - task_key: t5_finalize_run_failed
+          depends_on:   
+            - task_key: t0_start_run
+            - task_key: t1_extract_incremental
+            - task_key: t2_merge_to_silver
+            - task_key: t3_merge_fact_table
+            - task_key: t4_merge_dimension_tables
+          run_if: AT_LEAST_ONE_FAILED
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/finalize_run.py"
+            parameters:
+              - "{{job.run_id}}"
+              - "FAILED"
+
+        - task_key: t6_update_watermark
+          depends_on:
+            - task_key: t5_finalize_run_success
+          environment_key: serverless_env 
+          spark_python_task:
+            python_file: "./scripts/common/update_watermark.py"
+            parameters:
+              - "{{job.run_id}}"

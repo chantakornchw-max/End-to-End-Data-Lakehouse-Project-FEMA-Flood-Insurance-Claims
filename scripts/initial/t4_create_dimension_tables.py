@@ -1,26 +1,38 @@
 import sys
+import logging
+import scripts.common.config as cfg
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
-import logging
+
+
+logging.basicConfig(
+        level=logging.INFO, 
+        format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 def create_dimension_tables():
 
-    logging.basicConfig(
-        level=logging.INFO, 
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    # --------------------------------------------------
+    # 1. Get argv
+    # --------------------------------------------------
+    if len(sys.argv) < 3:
+        raise ValueError("run_id and bucket_name arguments are required.")
+
+    run_id = sys.argv[1]
+    bucket_name = sys.argv[2]
+    gold_output_path = f"s3://{bucket_name}/gold/dimensions"
 
     spark = (SparkSession.builder
         .appName("create_dimension_tables")
         .getOrCreate()
     )
 
-    bucket_name = sys.argv[1]
-    gold_output_path = f"s3://{bucket_name}/gold/dimensions"
-
     try:
-        logging.info("Starting create Dimension Tables...")
+        # --------------------------------------------------
+        # 2. Create Dimension Tables
+        # --------------------------------------------------
+        logging.info(f"Starting create Dimension Tables (Initial Load) for run_id = {run_id}.")
 
         # ==========================================
         # Dimension 1: dim_occupancy_type
@@ -56,9 +68,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_occupancy_type/")
-                .saveAsTable("fema_prod.gold.dim_occupancy_type") 
+                .saveAsTable(cfg.DIM_OCCUPANCY_TABLE) 
         )
-        logging.info("Created and registered fema_prod.gold.dim_occupancy_type successfully")
+        logging.info(f"Created and registered {cfg.DIM_OCCUPANCY_TABLE} successfully")
 
 
         # ==========================================
@@ -83,9 +95,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_primary_residence/")
-                .saveAsTable("fema_prod.gold.dim_primary_residence")
+                .saveAsTable(cfg.DIM_PRIMARY_RESIDENCE_TABLE)
         )
-        logging.info("Created and registered fema_prod.gold.dim_primary_residence successfully")
+        logging.info(f"Created and registered {cfg.DIM_PRIMARY_RESIDENCE_TABLE} successfully")
 
 
         # ==========================================
@@ -113,9 +125,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_building_deductible/")
-                .saveAsTable("fema_prod.gold.dim_building_deductible")
+                .saveAsTable(cfg.DIM_BUILDING_DEDUCTIBLE_TABLE)
         )
-        logging.info("Created and registered fema_prod.gold.dim_building_deductible successfully")
+        logging.info(f"Created and registered {cfg.DIM_BUILDING_DEDUCTIBLE_TABLE} successfully")
 
 
         # ==========================================
@@ -150,9 +162,9 @@ def create_dimension_tables():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", f"{gold_output_path}/dim_cause_of_damage/")
-            .saveAsTable("fema_prod.gold.dim_cause_of_damage")
+            .saveAsTable(cfg.DIM_CAUSE_OF_DAMAGE_TABLE)
         )
-        logging.info("Created and registered fema_prod.gold.dim_cause_of_damage successfully")
+        logging.info(f"Created and registered {cfg.DIM_CAUSE_OF_DAMAGE_TABLE} successfully")
 
 
         # ==========================================
@@ -188,9 +200,9 @@ def create_dimension_tables():
                 .mode("overwrite")
                 .option("overwriteSchema", "true")
                 .option("path", f"{gold_output_path}/dim_non_payment_reason/")
-                .saveAsTable("fema_prod.gold.dim_non_payment_reason")
+                .saveAsTable(cfg.DIM_NON_PAYMENT_REASON_TABLE)
         )
-        logging.info("Created and registered fema_prod.gold.dim_non_payment_reason successfully")
+        logging.info(f"Created and registered {cfg.DIM_NON_PAYMENT_REASON_TABLE} successfully")
 
 
         # ==========================================
@@ -215,19 +227,19 @@ def create_dimension_tables():
             .mode("overwrite")
             .option("overwriteSchema", "true")
             .option("path", f"{gold_output_path}/dim_is_underinsured/")
-            .saveAsTable("fema_prod.gold.dim_is_underinsured")
+            .saveAsTable(cfg.DIM_IS_UNDERINSURED_TABLE)
         )
-        logging.info("Created and registered fema_prod.gold.dim_is_underinsured successfully")
+        logging.info(f"Created and registered {cfg.DIM_IS_UNDERINSURED_TABLE} successfully")
 
 
     except Exception as e:
         logging.error(f"Unexpected error occurred!: {e}")
-        raise e
-
+        raise 
 
     finally:
         spark.stop()
         logging.info("Spark session stopped.")
+
 
 if __name__ == "__main__":
     create_dimension_tables()
