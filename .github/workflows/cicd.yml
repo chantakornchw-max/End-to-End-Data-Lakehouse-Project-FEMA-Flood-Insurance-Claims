@@ -2,7 +2,7 @@ name: FEMA CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "feature/v2-incremental-load"]
     paths-ignore:
       - "README.md"
       - "images/**"
