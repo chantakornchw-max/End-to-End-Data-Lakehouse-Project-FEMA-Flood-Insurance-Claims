@@ -46,7 +46,7 @@ resources:
       environments:
         - environment_key: serverless_env
           spec:
-            client: "1"
+            environment_version: "6"
 
       tasks:
         - task_key: t0_start_run
@@ -138,7 +138,7 @@ resources:
       environments:
         - environment_key: serverless_env
           spec:
-            client: "1"
+            environment_version: "6"
 
       tasks:
         - task_key: t0_start_run
