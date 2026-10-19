@@ -21,5 +21,5 @@ resource "databricks_storage_credential" "s3" {
   }
 
   skip_validation = true
-  comment = "Storage credential for FEMA Data Lakehouse"
+  comment         = "Storage credential for FEMA Data Lakehouse"
 }
