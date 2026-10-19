@@ -6,5 +6,5 @@ variable "bucket_name" {
 variable "force_destroy" {
   description = "Allow bucket to be destroyed even when it contains objects"
   type        = bool
-  default     = true
+  default     = false
 }

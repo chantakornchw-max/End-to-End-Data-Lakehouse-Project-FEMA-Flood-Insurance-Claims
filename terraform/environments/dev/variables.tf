@@ -14,7 +14,7 @@ variable "s3_bucket_name" {
 variable "force_destroy_s3" {
   description = "Allow destroying a non-empty S3 bucket"
   type        = bool
-  default     = true
+  default     = false
 }
 
 
