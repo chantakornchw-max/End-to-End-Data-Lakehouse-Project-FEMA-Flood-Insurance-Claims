@@ -1,5 +1,5 @@
 resource "databricks_secret_scope" "fema_scope" {
-  name = "fema_scope"
+  name = "${var.catalog_name}_scope"
 }
 
 resource "databricks_secret" "rds_endpoint" {
@@ -15,7 +15,8 @@ resource "databricks_secret" "rds_username" {
 }
 
 resource "databricks_secret" "rds_password" {
-  key          = "rds_password"
-  string_value = var.rds_password
-  scope        = databricks_secret_scope.fema_scope.name
+  key                     = "rds_password"
+  string_value_wo         = var.rds_password
+  string_value_wo_version = 1
+  scope                   = databricks_secret_scope.fema_scope.name
 }
