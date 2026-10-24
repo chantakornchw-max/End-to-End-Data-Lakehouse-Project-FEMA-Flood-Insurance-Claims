@@ -17,11 +17,11 @@ public_subnet_2_cidr = "10.10.2.0/24"
 # ==========================================
 # RDS
 # ==========================================
-rds_engine_version      = "15"
-rds_instance_class      = "db.t3.micro"
-rds_allocated_storage   = 20
-rds_db_name             = "fema_flood_db"
-rds_username            = "postgres"
+rds_engine_version    = "15"
+rds_instance_class    = "db.t3.micro"
+rds_allocated_storage = 20
+rds_db_name           = "fema_flood_db"
+rds_username          = "postgres"
 
 rds_publicly_accessible = true
 rds_skip_final_snapshot = true
