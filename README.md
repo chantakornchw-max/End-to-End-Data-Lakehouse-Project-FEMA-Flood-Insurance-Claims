@@ -1,11 +1,12 @@
 # End-to-End Data Lakehouse Project: FEMA Flood Insurance Claims
 
-<!-- **⚠️ Work in Progress ⚠️**  -->
+🚧 **Project Status: Work in Progress**
 
+The project is being upgraded from full-load processing with overwrite to incremental data loading. 
 
 ## Table of Contents
 
-* [Business Case](#business-case)
+* [Project Context & Objectives](#project-context--objectives)
 * [Pipeline Architecture](#pipeline-architecture-data-lakehouse)
     * [Tech Stacks](#tech-stacks)
     * [Data Pipeline Flow](#data-pipeline-flow-elt)
@@ -22,20 +23,28 @@
 
 
 
-## Business Case
+## Project Context & Objectives
 
-In the property and casualty insurance industry, accurate risk assessment is the primary defense against catastrophic financial losses. For stakeholders and underwriting teams, managing flood risks requires more than just high-level observation; it demands highly granular, automated, and actionable intelligence. Stakeholders within the risk management, actuarial, and claims operations teams rely on this pipeline for:
+Flood insurance claims data can provide insights into historical loss patterns, claim payments, geographic distributions, and claim rejection trends. Understanding these patterns requires reliable data pipelines that transform raw claims transactions into structured, analysis-ready datasets.
 
-* Optimizing premium pricing models based on precise physical risk factors, such as property elevation and flood zone vulnerabilities.
+This personal project uses the public OpenFEMA FIMA NFIP Redacted Claims v2 dataset to build an end-to-end data lakehouse, demonstrating the process of ingesting, transforming, modeling, and preparing claims data for downstream analytics.
 
-* Analyzing geographic risk exposure to pinpoint vulnerability hotspots and proactively manage policy capacity in high-risk areas.
+**The project focuses on:**
 
-* Identifying systemic underinsurance behaviors across specific property portfolios to uncover targeted cross-selling and upselling opportunities.
+  * Data Preparation & Modeling: Transforming raw claims transactions into structured, curated datasets using data cleaning, transformation, and dimensional modeling.
 
-<!-- * **Replacing** fragmented, manual data wrangling with a robust automated pipeline, allowing the team to focus on mitigating claim rejections and refining policy strategies rather than data collection. -->
+  * Financial & Historical Analysis: Exploring recorded damage amounts, claim payments, and historical claim patterns across flood events and time periods.
+
+  * Geospatial & Flood Zone Analysis: Examining the geographic distribution of claims and recorded losses across states, locations, and FEMA flood zones.
+
+  * Claim Rejection Analysis: Exploring recorded claim rejection reasons and providing claim-level data for further investigation.
+
+  * End-to-End Data Engineering: Demonstrating an integrated data platform covering data ingestion, processing, storage, orchestration, and Power BI dashboard consumption.
+
+**Scope & Limitations:** This is a personal project based on publicly available data. The analyses describe patterns within the selected dataset and do not represent the internal claims portfolio of any specific insurance company. Applying the findings to actual underwriting, premium pricing, or claims management decisions would require additional validation and relevant company-specific data.
 
 
-**Data Source:** [OpenFEMA Dataset](https://www.fema.gov/openfema-data-page/fima-nfip-redacted-claims-v2)
+**Data Source:** [OpenFEMA — FIMA NFIP Redacted Claims v2](https://www.fema.gov/openfema-data-page/fima-nfip-redacted-claims-v2)
 
 
 ## Pipeline Architecture (Data Lakehouse)
